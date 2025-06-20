@@ -3,12 +3,12 @@ from dataset.coco import build_coco
 from dataset.openimage import build_openimage
 from dataset.pexels import build_pexels
 from dataset.t2i import build_t2i, build_t2i_code, build_t2i_image
-
+from dataset.imagenet_hf import imagenet_train
 
 def build_dataset(args, **kwargs):
     # images
     if args.dataset == 'imagenet':
-        return build_imagenet(args, **kwargs)
+        return imagenet_train(transform=kwargs['transform'], num_proc=8)
     if args.dataset == 'imagenet_code':
         return build_imagenet_code(args, **kwargs)
     if args.dataset == 'coco':

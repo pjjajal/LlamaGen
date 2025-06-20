@@ -15,6 +15,7 @@ from utils.distributed import init_distributed_mode
 from dataset.augmentation import center_crop_arr
 from dataset.build import build_dataset
 from tokenizer.tokenizer_image.vq_model import VQ_models
+from dataset.imagenet_hf import imagenet_collate_fn
 
 
 #################################################################################
@@ -85,7 +86,8 @@ def main(args):
         sampler=sampler,
         num_workers=args.num_workers,
         pin_memory=True,
-        drop_last=False
+        drop_last=False,
+        collate_fn=imagenet_collate_fn if args.dataset == 'imagenet' else None
     )
 
     total = 0

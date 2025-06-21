@@ -98,7 +98,7 @@ class NHeadedGPT(Transformer):
 
         Args:
             logits (torch.Tensor): Logits of shape (bs, sequence_dirs, seq_len, vocab_size)
-        
+
         Returns:
             logits (torch.Tensor): Logits of shape (bs, sequence_dirs, seq_len, vocab_size)
         """
@@ -174,8 +174,10 @@ class NHeadedGPT(Transformer):
             # why do we sum over sequence directions?
             # because log(p(x_i)) = log(p(x_i | x_{<i})) + log(p(x_i | x_{>i}))
             # product of probabilities is equivalent to summing the log probabilities
-            poe_logits = logits.sum(dim=1)  # sum over sequence directions 
-            loss = F.cross_entropy(poe_logits.view(-1, poe_logits.size(-1)), targets.view(-1))
+            poe_logits = logits.sum(dim=1)  # sum over sequence directions
+            loss = F.cross_entropy(
+                poe_logits.view(-1, poe_logits.size(-1)), targets.view(-1)
+            )
 
         return logits, loss
 
@@ -209,6 +211,15 @@ def MultiHeadGPT_B(**kwargs):
     return NHeadedGPT(
         NHeadedGPTConfig(n_layer=12, n_head=12, dim=768, **kwargs)
     )  # 111M
+
+
+MultiGPT_models = {
+    "MultiGPT-B": MultiHeadGPT_B,
+    "MultiGPT-L": MultiHeadGPT_L,
+    "MultiGPT-XL": MultiHeadGPT_XL,
+    "MultiGPT-XXL": MultiHeadGPT_XXL,
+    "MultiGPT-XXXL": MultiHeadGPT_XXXL,
+}
 
 
 if __name__ == "__main__":

@@ -73,9 +73,8 @@ class NHeadedGPT(Transformer):
         for mod in self.output.heads:
             nn.init.constant_(mod.weight, 0)
             nn.init.normal_(mod.weight, mean=0.0, std=0.02)
-        self.output.heads[1] = self.output.heads[0]  # share weights for fwd-rev
-        self.norm.norms[0] = self.norm.norms[1]  # share norms for fwd-rev
 
+    @torch.no_grad()
     def build_seq_dirs(self, idx: torch.Tensor):
         """
         Builds the seq directions for the input tensor idx.
@@ -155,9 +154,9 @@ class NHeadedGPT(Transformer):
         if self.training:
             if self.output_heads > 1:
                 logits = logits[:, :, self.cls_token_num - 1 :].contiguous()
+                aligned_logits = self.reverse_seq_dirs(logits)
             else:
                 logits = logits[:, self.cls_token_num - 1 :].contiguous()
-        logits = self.reverse_seq_dirs(logits)
 
         # if we are given some desired targets also calculate the loss
         loss = None
@@ -174,12 +173,12 @@ class NHeadedGPT(Transformer):
             # why do we sum over sequence directions?
             # because log(p(x_i)) = log(p(x_i | x_{<i})) + log(p(x_i | x_{>i}))
             # product of probabilities is equivalent to summing the log probabilities
-            poe_logits = logits.sum(dim=1)  # sum over sequence directions
+            poe_logits = aligned_logits.sum(dim=1)  # sum over sequence directions
             loss = F.cross_entropy(
                 poe_logits.view(-1, poe_logits.size(-1)), targets.view(-1)
             )
 
-        return logits, loss
+        return logits, aligned_logits, loss
 
 
 ### class-conditional
